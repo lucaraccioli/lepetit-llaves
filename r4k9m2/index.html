@@ -68,14 +68,52 @@ button{
 .day{font-size:34px;font-weight:800;color:#263746;margin:4px 0 2px}
 .month{font-size:13px;font-weight:bold;text-transform:capitalize}
 .year{font-size:11px;color:#687481;margin-top:2px}
+
+/* Contenedor de botones de contacto (WhatsApp + Copiar) */
+.contact-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
 .wa{
   display:flex;justify-content:center;align-items:center;
   text-align:center;text-decoration:none;background:#20b85a;
   color:white;border-radius:10px;min-height:45px;
-  padding:10px;margin-top:12px;font-size:13px;
-  font-weight:800;overflow-wrap:anywhere
+  padding:10px;font-size:13px;
+  font-weight:800;overflow-wrap:anywhere;
+  flex: 1;
 }
-.off{background:#d9dee3;color:#65717c}
+.wa.off{background:#d9dee3;color:#65717c;flex: 1;}
+
+/* Estilo para el botón de copiar número */
+.btn-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #e9edf0;
+  color: #263746;
+  border-radius: 10px;
+  min-height: 45px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-copy:hover {
+  background: #d8dde2;
+}
+.btn-copy.copied {
+  background: #d1fae5;
+  color: #065f46;
+}
+.btn-copy svg {
+  flex-shrink: 0;
+}
+
 .detail{
   background:#fafbfc;border:1px solid #e9edf0;
   border-radius:10px;padding:10px;min-width:0
@@ -135,14 +173,38 @@ function esc(x){
   }[c]));
 }
 
+function copiarTexto(texto, boton) {
+  navigator.clipboard.writeText(texto).then(() => {
+    const textoOriginal = boton.innerHTML;
+    boton.classList.add('copied');
+    // Ícono de tilde de éxito + texto cambiado
+    boton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> ¡Copiado!';
+    setTimeout(() => {
+      boton.innerHTML = textoOriginal;
+      boton.classList.remove('copied');
+    }, 2000);
+  }).catch(err => {
+    console.error('Error al copiar: ', err);
+  });
+}
+
 function tarjeta(r){
-  const wa=r.whatsapp
+  const telLimpio = r.telefono || '';
+  
+  const wa = r.whatsapp
     ? '<a class="wa" href="https://wa.me/'+
       encodeURIComponent(r.whatsapp)+
       '" target="_blank" rel="noopener">◉ '+
       esc(r.telefono)+' · ABRIR WHATSAPP</a>'
     : '<div class="wa off">'+
       esc(r.telefono||'Teléfono no informado')+'</div>';
+
+  // Botón de copiar con el ícono de los dos cuadritos
+  const btnCopy = telLimpio
+    ? '<button class="btn-copy" onclick="copiarTexto(\'' + esc(telLimpio) + '\', this)" title="Copiar número">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+      'Copiar</button>'
+    : '';
 
   return '<article class="card">'+
     '<div class="guest">'+esc(r.huesped)+'</div>'+
@@ -163,7 +225,7 @@ function tarjeta(r){
         '<div class="year">'+esc(r.salidaAnio)+'</div>'+
       '</div>'+
     '</div>'+
-    wa+
+    '<div class="contact-actions">' + wa + btnCopy + '</div>' +
     '<div class="details">'+
       '<div class="detail">'+
         '<div class="label">SALDO A ABONAR EL DÍA DE INGRESO</div>'+
