@@ -69,7 +69,7 @@ button{
 .month{font-size:13px;font-weight:bold;text-transform:capitalize}
 .year{font-size:11px;color:#687481;margin-top:2px}
 
-/* Contenedor de botones de contacto (WhatsApp + Copiar) */
+/* Contenedor de botones de contacto lado a lado */
 .contact-actions {
   display: flex;
   gap: 8px;
@@ -81,12 +81,12 @@ button{
   color:white;border-radius:10px;min-height:45px;
   padding:10px;font-size:13px;
   font-weight:800;overflow-wrap:anywhere;
-  flex: 1;
+  flex: 1.4;
 }
 .wa.off{background:#d9dee3;color:#65717c;flex: 1;}
 
-/* Estilo para el botón de copiar número */
-.btn-copy {
+/* Estilo para el botón de agendar contacto */
+.btn-contact {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,15 +102,12 @@ button{
   cursor: pointer;
   transition: background 0.2s;
   white-space: nowrap;
+  flex: 1;
 }
-.btn-copy:hover {
+.btn-contact:hover {
   background: #d8dde2;
 }
-.btn-copy.copied {
-  background: #d1fae5;
-  color: #065f46;
-}
-.btn-copy svg {
+.btn-contact svg {
   flex-shrink: 0;
 }
 
@@ -173,24 +170,29 @@ function esc(x){
   }[c]));
 }
 
-function copiarTexto(texto, boton) {
-  navigator.clipboard.writeText(texto).then(() => {
-    const textoOriginal = boton.innerHTML;
-    boton.classList.add('copied');
-    boton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> ¡Copiado!';
-    setTimeout(() => {
-      boton.innerHTML = textoOriginal;
-      boton.classList.remove('copied');
-    }, 2000);
-  }).catch(err => {
-    console.error('Error al copiar: ', err);
-  });
+function descargarVCard(nombre, telefono) {
+  const telLimpio = telefono.replace(/[^\d+]/g, '');
+  const vcardData = 
+    'BEGIN:VCARD\n' +
+    'VERSION:3.0\n' +
+    'FN:' + nombre + '\n' +
+    'TEL;TYPE=CELL:' + telLimpio + '\n' +
+    'END:VCARD';
+
+  const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', nombre.replace(/[^a-zA-Z0-9]/g, '_') + '.vcf');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function tarjeta(r){
   const telLimpio = r.telefono || '';
   
-  const wa=r.whatsapp
+  const wa = r.whatsapp
     ? '<a class="wa" href="https://wa.me/'+
       encodeURIComponent(r.whatsapp)+
       '" target="_blank" rel="noopener">◉ '+
@@ -198,10 +200,10 @@ function tarjeta(r){
     : '<div class="wa off">'+
       esc(r.telefono||'Teléfono no informado')+'</div>';
 
-  const btnCopy = telLimpio
-    ? '<button class="btn-copy" onclick="copiarTexto(\'' + esc(telLimpio) + '\', this)" title="Copiar número">' +
-      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
-      'Copiar</button>'
+  const btnContact = telLimpio
+    ? '<button class="btn-contact" onclick="descargarVCard(\'' + esc(r.huesped) + '\', \'' + esc(telLimpio) + '\')" title="Guardar contacto">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>' +
+      'Agendar</button>'
     : '';
 
   return '<article class="card">'+
@@ -223,7 +225,7 @@ function tarjeta(r){
         '<div class="year">'+esc(r.salidaAnio)+'</div>'+
       '</div>'+
     '</div>'+
-    '<div class="contact-actions">' + wa + btnCopy + '</div>' +
+    '<div class="contact-actions">' + wa + btnContact + '</div>' +
     '<div class="details">'+
       '<div class="detail">'+
         '<div class="label">SALDO A ABONAR EL DÍA DE INGRESO</div>'+
