@@ -120,6 +120,52 @@ button{
   font-size:14px;font-weight:650;line-height:1.4;
   margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere
 }
+
+/* Botón y panel de datos de transferencia */
+.btn-alias{
+  margin-top:9px;
+  width:100%;
+  background:#e9edf0;
+  color:#263746;
+  border-radius:8px;
+  padding:7px 9px;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.25;
+}
+.btn-alias:hover{
+  background:#d8dde2;
+}
+.alias-box{
+  display:none;
+  margin-top:8px;
+  padding:9px;
+  background:#f2f5f8;
+  border:1px solid #dce2e8;
+  border-radius:8px;
+  font-size:12px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.alias-box.open{
+  display:block;
+}
+.alias-code{
+  font-weight:800;
+  color:#263746;
+  font-size:13px;
+}
+.btn-copy{
+  margin-top:7px;
+  width:100%;
+  background:#263746;
+  color:#fff;
+  border-radius:7px;
+  padding:6px 8px;
+  font-size:11px;
+  font-weight:800;
+}
+
 .empty,.loading{
   text-align:center;padding:26px 15px;color:#68717c;
   background:white;border-radius:13px
@@ -162,12 +208,50 @@ button{
 <script>
 const API_URL =
 'https://script.google.com/macros/s/AKfycbzjKY3hRGd7WUuzMWjgsOUJMktdQyAiSOCAE_mzPiVSFtRVT7M6_h_iSc6vhpK5OPNB/exec';
-  
+
+// Configurá aquí tus datos de transferencia
+const ALIAS_TRANSFERENCIA = 'lepetit425';
+const TITULAR_TRANSFERENCIA = 'Leandro Uriel Caraccioli';
+
 function esc(x){
   return String(x==null?'':x).replace(/[&<>"']/g,c=>({
     '&':'&amp;','<':'&lt;','>':'&gt;',
     '"':'&quot;',"'":'&#39;'
   }[c]));
+}
+
+function toggleAlias(id){
+  const box = document.getElementById('aliasBox_' + id);
+  if (box) box.classList.toggle('open');
+}
+
+function copiarAlias(btnId){
+  const btn = document.getElementById(btnId);
+  const texto = ALIAS_TRANSFERENCIA;
+
+  const confirmar = () => {
+    if (!btn) return;
+    const prev = btn.textContent;
+    btn.textContent = '✓ Alias copiado';
+    setTimeout(() => { btn.textContent = prev; }, 1600);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(texto).then(confirmar).catch(() => fallbackCopy(texto, confirmar));
+  } else {
+    fallbackCopy(texto, confirmar);
+  }
+}
+
+function fallbackCopy(texto, cb){
+  const ta = document.createElement('textarea');
+  ta.value = texto;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); cb(); } catch (e) {}
+  document.body.removeChild(ta);
 }
 
 function descargarVCard(nombre, telefono) {
@@ -189,7 +273,8 @@ function descargarVCard(nombre, telefono) {
   document.body.removeChild(link);
 }
 
-function tarjeta(r){
+function tarjeta(r, idx){
+  const id = idx != null ? idx : Math.random().toString(36).slice(2, 8);
   const telLimpio = r.telefono || '';
   
   const wa = r.whatsapp
@@ -230,6 +315,12 @@ function tarjeta(r){
       '<div class="detail">'+
         '<div class="label">SALDO A ABONAR EL DÍA DE INGRESO</div>'+
         '<div class="value">'+esc(r.saldo||'—')+'</div>'+
+        '<button type="button" class="btn-alias" onclick="toggleAlias(\''+id+'\')">Datos transferencia / Alias</button>'+
+        '<div id="aliasBox_'+id+'" class="alias-box">'+
+          '<div>Alias: <span class="alias-code">'+esc(ALIAS_TRANSFERENCIA)+'</span></div>'+
+          '<div>Titular: '+esc(TITULAR_TRANSFERENCIA)+'</div>'+
+          '<button type="button" id="btnCopy_'+id+'" class="btn-copy" onclick="copiarAlias(\'btnCopy_'+id+'\')">Copiar alias</button>'+
+        '</div>'+
       '</div>'+
       '<div class="detail">'+
         '<div class="label">OBSERVACIONES</div>'+
@@ -279,7 +370,7 @@ function cargar(){
 
     contador.textContent=datos.length+' reservas próximas';
     contenedor.innerHTML=datos.length
-      ? datos.map(tarjeta).join('')
+      ? datos.map((r, i) => tarjeta(r, i)).join('')
       : '<div class="empty">No hay reservas próximas cargadas.</div>';
   };
 
