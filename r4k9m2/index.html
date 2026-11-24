@@ -121,9 +121,14 @@ button{
   margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere
 }
 
-/* Botón y panel de datos de transferencia */
-.btn-alias{
+/* Botones y paneles de datos de transferencia */
+.alias-btns{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
   margin-top:9px;
+}
+.btn-alias{
   width:100%;
   background:#e9edf0;
   color:#263746;
@@ -209,9 +214,12 @@ button{
 const API_URL =
 'https://script.google.com/macros/s/AKfycbzjKY3hRGd7WUuzMWjgsOUJMktdQyAiSOCAE_mzPiVSFtRVT7M6_h_iSc6vhpK5OPNB/exec';
 
-// Configurá aquí tus datos de transferencia
-const ALIAS_TRANSFERENCIA = 'lepetit425';
-const TITULAR_TRANSFERENCIA = 'Leandro Uriel Caraccioli';
+// Datos de transferencia en pesos y dólares
+const ALIAS_PESOS = 'lepetit425';
+const TITULAR_PESOS = 'Leandro Uriel Caraccioli';
+
+const ALIAS_DOLARES = 'lepetit425usd';
+const TITULAR_DOLARES = 'Leandro Uriel Caraccioli';
 
 function esc(x){
   return String(x==null?'':x).replace(/[&<>"']/g,c=>({
@@ -220,14 +228,16 @@ function esc(x){
   }[c]));
 }
 
-function toggleAlias(id){
-  const box = document.getElementById('aliasBox_' + id);
-  if (box) box.classList.toggle('open');
+function toggleAlias(boxId){
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  const yaAbierto = box.classList.contains('open');
+  document.querySelectorAll('.alias-box.open').forEach(el => el.classList.remove('open'));
+  if (!yaAbierto) box.classList.add('open');
 }
 
-function copiarAlias(btnId){
+function copiarTexto(texto, btnId){
   const btn = document.getElementById(btnId);
-  const texto = ALIAS_TRANSFERENCIA;
 
   const confirmar = () => {
     if (!btn) return;
@@ -315,11 +325,21 @@ function tarjeta(r, idx){
       '<div class="detail">'+
         '<div class="label">SALDO A ABONAR EL DÍA DE INGRESO</div>'+
         '<div class="value">'+esc(r.saldo||'—')+'</div>'+
-        '<button type="button" class="btn-alias" onclick="toggleAlias(\''+id+'\')">Datos transferencia / Alias</button>'+
-        '<div id="aliasBox_'+id+'" class="alias-box">'+
-          '<div>Alias: <span class="alias-code">'+esc(ALIAS_TRANSFERENCIA)+'</span></div>'+
-          '<div>Titular: '+esc(TITULAR_TRANSFERENCIA)+'</div>'+
-          '<button type="button" id="btnCopy_'+id+'" class="btn-copy" onclick="copiarAlias(\'btnCopy_'+id+'\')">Copiar alias</button>'+
+        '<div class="alias-btns">'+
+          '<button type="button" class="btn-alias" onclick="toggleAlias(\'aliasPesos_'+id+'\')">Cuenta en pesos</button>'+
+          '<button type="button" class="btn-alias" onclick="toggleAlias(\'aliasDolares_'+id+'\')">Cuenta en dólares</button>'+
+        '</div>'+
+        '<div id="aliasPesos_'+id+'" class="alias-box">'+
+          '<div><strong>Cuenta en pesos</strong></div>'+
+          '<div>Alias: <span class="alias-code">'+esc(ALIAS_PESOS)+'</span></div>'+
+          '<div>Titular: '+esc(TITULAR_PESOS)+'</div>'+
+          '<button type="button" id="btnCopyPesos_'+id+'" class="btn-copy" onclick="copiarTexto(ALIAS_PESOS, \'btnCopyPesos_'+id+'\')">Copiar alias pesos</button>'+
+        '</div>'+
+        '<div id="aliasDolares_'+id+'" class="alias-box">'+
+          '<div><strong>Cuenta en dólares</strong></div>'+
+          '<div>Alias: <span class="alias-code">'+esc(ALIAS_DOLARES)+'</span></div>'+
+          '<div>Titular: '+esc(TITULAR_DOLARES)+'</div>'+
+          '<button type="button" id="btnCopyDolares_'+id+'" class="btn-copy" onclick="copiarTexto(ALIAS_DOLARES, \'btnCopyDolares_'+id+'\')">Copiar alias dólares</button>'+
         '</div>'+
       '</div>'+
       '<div class="detail">'+
